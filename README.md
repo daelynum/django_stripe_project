@@ -21,3 +21,10 @@ http://0.0.0.0:8000/
 
 Admin login: user\
 Admin password: password
+
+#### Payment in String
+
+To simulate a successful payment, use this card \
+Number - 4242424242424242 \
+CVC - Any 3 digits \
+Date - Any future date
