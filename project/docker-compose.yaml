@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:13-alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=${POSTGRES_USR}
+      - POSTGRES_PASSWORD=${POSTGRES_PWD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ./pg_db:/var/lib/postgresql/data/
+      - .:/src
+      - ./sql/dbexport.sql:/docker-entrypoint-initdb.d/dbexport.sql
+    networks:
+      - django-stripe-project
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USR}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - .env
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+
+  server:
+    build: .
+    command: python manage.py runserver ${ALLOWED_HOSTS}:${COMPOSE_EXPOSED_PORT}
+    restart: on-failure
+    ports:
+      - "${COMPOSE_EXPOSED_PORT}:${COMPOSE_EXPOSED_PORT}"
+    env_file:
+      - .env
+    volumes:
+      - .:/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - django-stripe-project
+
+networks:
+  django-stripe-project:
+    driver: bridge
